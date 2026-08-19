@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlin.math.cos
 import kotlin.math.sin
@@ -112,6 +113,7 @@ fun WallpaperBackground(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .testTag("wallpaper_background")
             .drawBehind { drawRect(brush = brush) },
     )
 }
