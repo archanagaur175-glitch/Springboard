@@ -9,4 +9,8 @@
         <item name="android:colorAccent">@color/ios_blue</item>
         <item name="android:windowDisablePreview">true</item>
     </style>
+
+    <style name="Theme.Springboard.Fullscreen">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
 </resources>
