@@ -1,5 +1,6 @@
 package com.springboard.launcher.ui.controlcenter
 
+import android.annotation.SuppressLint
 import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -49,6 +50,7 @@ import kotlin.math.max
  * toggle drives the real system (or falls back to a settings deep-link when the API
  * blocks it), and the panel dismisses on swipe-up, tap-outside, or the close button.
  */
+@SuppressLint("NewApi")
 @Composable
 fun ControlCenterPanel(
     systemState: SystemStateRepository,

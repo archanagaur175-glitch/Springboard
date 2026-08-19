@@ -28,13 +28,12 @@ fun GlassSurface(
     blurRadius: Float = 36f,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val canBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     Box(modifier = modifier) {
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .graphicsLayer {
-                    if (canBlur) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         renderEffect = RenderEffect.createBlurEffect(
                             blurRadius,
                             blurRadius,
