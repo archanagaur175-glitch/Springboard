@@ -37,6 +37,7 @@ class SettingsRepository(
         val NC_RATIONALE_SEEN = booleanPreferencesKey("nc_rationale_seen")
         val OVERLAY_RATIONALE_SEEN = booleanPreferencesKey("overlay_rationale_seen")
         val BRIGHTNESS_RATIONALE_SEEN = booleanPreferencesKey("brightness_rationale_seen")
+        val CURRENT_PAGE = intPreferencesKey("current_page")
         val RECENT_PACKAGES = stringPreferencesKey("recent_packages")
     }
 

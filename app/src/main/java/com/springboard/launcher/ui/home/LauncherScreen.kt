@@ -42,6 +42,8 @@ import com.springboard.launcher.ui.designsystem.WallpaperBackground
 import com.springboard.launcher.ui.designsystem.rememberWallpaperBrush
 import com.springboard.launcher.ui.designsystem.rememberSquircleShape
 import com.springboard.launcher.ui.notifications.NotificationCenterSurface
+import com.springboard.launcher.ui.permission.GateKind
+import com.springboard.launcher.ui.permission.PermissionGate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -77,8 +79,38 @@ fun LauncherScreen(app: SpringboardApp) {
     var openFolderId by remember { mutableStateOf<Long?>(null) }
     var ncVisible by remember { mutableStateOf(false) }
     var recentsVisible by remember { mutableStateOf(false) }
+    var gate by remember { mutableStateOf(GateKind.NONE) }
 
     val backdrop = rememberWallpaperBrush(wallpaper)
+
+    val openNotificationCenter: () -> Unit = {
+        val enabled = runCatching {
+            android.app.NotificationManager.getEnabledListenerPackages(context)
+                .contains(context.packageName)
+        }.getOrDefault(false)
+        if (enabled) {
+            ncVisible = true
+        } else {
+            gate = GateKind.NOTIFICATION_LISTENER
+        }
+    }
+
+    val openControlCenter: () -> Unit = {
+        if (OverlayController.canDrawOverlays(context)) {
+            OverlayController.showControlCenter(context)
+        } else {
+            gate = GateKind.OVERLAY
+        }
+    }
+
+    LaunchedEffect(gate) {
+        when (gate) {
+            GateKind.OVERLAY -> container.settings.setOverlayRationaleSeen()
+            GateKind.WRITE_SETTINGS -> container.settings.setBrightnessRationaleSeen()
+            GateKind.NOTIFICATION_LISTENER -> container.settings.setNcRationaleSeen()
+            else -> Unit
+        }
+    }
 
     val launchApp: (String) -> Unit = { pkg ->
         val intent = container.appRepository.launchIntent(pkg)
@@ -147,12 +179,8 @@ fun LauncherScreen(app: SpringboardApp) {
         Column(Modifier.fillMaxSize()) {
             IosStatusBar(
                 state = container.systemState,
-                onOpenNotificationCenter = { ncVisible = true },
-                onOpenControlCenter = {
-                    if (OverlayController.canDrawOverlays(context)) {
-                        OverlayController.showControlCenter(context)
-                    }
-                },
+                onOpenNotificationCenter = openNotificationCenter,
+                onOpenControlCenter = openControlCenter,
             )
 
             Box(Modifier.weight(1f)) {
@@ -265,6 +293,17 @@ fun LauncherScreen(app: SpringboardApp) {
                 appRepository = container.appRepository,
                 systemState = container.systemState,
                 onLaunch = launchApp,
+                modifier = Modifier.matchParentSize(),
+            )
+        }
+
+        if (gate != GateKind.NONE) {
+            PermissionGate(
+                kind = gate,
+                onOpenSettings = { intent ->
+                    runCatching { context.startActivity(intent) }
+                },
+                onDismiss = { gate = GateKind.NONE },
                 modifier = Modifier.matchParentSize(),
             )
         }
