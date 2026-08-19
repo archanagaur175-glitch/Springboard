@@ -238,7 +238,7 @@ fun ControlCenterPanel(
                                     context.startActivity(android.content.Intent(Settings.ACTION_WIRELESS_SETTINGS))
                                 }
                             }
-                        }
+                        })
                     }
 
                     val session = media

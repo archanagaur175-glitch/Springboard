@@ -93,7 +93,7 @@ fun LockScreen(
                     container.appRepository.cameraLaunchIntent()?.let {
                         runCatching { context.startActivity(it) }
                     }
-                }
+                })
             }
 
             Spacer(Modifier.weight(1f))
