@@ -7,8 +7,9 @@ package com.springboard.launcher.domain
 object AppCategory {
 
     private val keywordMap = listOf(
-        Category("Social", setOf("instagram", "facebook", "whatsapp", "telegram", "messenger", "snapchat", "tiktok", "twitter", "tweet", "linkedin", "discord", "reddit", "threads", "pinterest", "xhamster", "viber", "imo", "snap", "clubhouse", "be real", "bereal")),
+        Category("System", setOf("com.android.settings", "com.android.systemui", "systemui", "settings")),
         Category("Entertainment", setOf("youtube", "netflix", "spotify", "music", "video", "prime video", "disney", "hulu", "hbo", "max", "audio", "podcast", "twitch", "plex", "apple tv", "vimeo", "soundcloud", "deezer", "tidal", "cast")),
+        Category("Social", setOf("instagram", "facebook", "whatsapp", "telegram", "messenger", "snapchat", "tiktok", "twitter", "tweet", "linkedin", "discord", "reddit", "threads", "pinterest", "xhamster", "viber", "imo", "snap", "clubhouse", "be real", "bereal")),
         Category("Productivity", setOf("docs", "drive", "sheets", "slides", "word", "excel", "powerpoint", "notion", "gmail", "mail", "calendar", "notes", "files", "file", "calculator", "office", "slack", "zoom", "teams", "trello", "asana", "github", "outlook", "one note", "keep", "tasks", "todo")),
         Category("Games", setOf("game", "games", "angry", "candy", "clash", "roblox", "minecraft", "subway", "temple", "gacha", "cod", "fifa", "nba", "nfl", "pubg", "fortnite", "among", "mario", "pokemon", "solitaire", "chess", "puzzle", "word")),
         Category("Finance", setOf("bank", "banking", "paypal", "wallet", "finance", "cash", "money", "venmo", "zelle", "gpay", "google pay", "paytm", "upi", "credit", "stock", "crypto", "bitcoin", "coinbase", "revolut", "wise", "credit kar")),
@@ -17,8 +18,7 @@ object AppCategory {
         Category("Health & Fitness", setOf("health", "fit", "fitness", "workout", "sleep", "yoga", "med", "hospital", "myfitness", "steps", "runner", "gym", "meditation", "heart", "diet")),
         Category("Communication", setOf("phone", "dialer", "contact", "message", "sms", "duo", "imo", "calls", "recorder", "signal")),
         Category("Photo & Video", setOf("camera", "photo", "gallery", "photos", "video", "record", "lightroom", "vsco", "instagram stories", "cutter", "editor")),
-        Category("Utilities", setOf("settings", "setings", "file", "explorer", "clock", "weather", "flashlight", "scanner", "launcher", "widget", "vpn", "browser", "chrome", "firefox", "brave", "edge", "safari", "download", "cleaning", "cleaner", "battery", "wifi")),
-        Category("System", setOf("com.android.settings", "com.android.systemui", "systemui", "settings")),
+        Category("Utilities", setOf("settings", "setings", "file", "explorer", "clock", "weather", "flashlight", "scanner", "launcher", "vpn", "browser", "chrome", "firefox", "brave", "edge", "safari", "download", "cleaning", "cleaner", "battery", "wifi")),
     )
 
     private val DEFAULT = "Other"
