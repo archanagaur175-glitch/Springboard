@@ -269,16 +269,18 @@ private fun StepCard(
 }
 
 private fun requestHomeRole(context: android.content.Context) {
-    val roleManager = context.getSystemService(RoleManager::class.java)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && roleManager != null) {
-        runCatching {
-            if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
-                context.startActivity(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
-            } else {
-                context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val roleManager = context.getSystemService(RoleManager::class.java)
+        if (roleManager != null) {
+            runCatching {
+                if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
+                    context.startActivity(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
+                } else {
+                    context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
+                }
             }
+            return
         }
-    } else {
-        runCatching { context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS)) }
     }
+    runCatching { context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS)) }
 }
