@@ -80,7 +80,7 @@ class DragController {
         draggingType = type
         dragStartWindow = pointerWindow
         ghostOffset = Offset.Zero
-        pointerWindow = pointerWindow
+        this.pointerWindow = pointerWindow
         updateHover()
     }
 

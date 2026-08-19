@@ -156,7 +156,7 @@ class SystemStateRepository(
 
     private val mediaListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
         val top = controllers.orEmpty().firstOrNull { controller ->
-            controller.mediaMetadata != null || controller.playbackState != null
+            controller.metadata != null || controller.playbackState != null
         }
         _mediaSession.value = buildMediaInfo(top)
     }
@@ -300,7 +300,7 @@ class SystemStateRepository(
 
     private fun buildMediaInfo(controller: MediaController?): MediaSessionInfo? {
         if (controller == null) return null
-        val metadata = controller.mediaMetadata
+        val metadata = controller.metadata
         val state = controller.playbackState
         if (metadata == null && state == null) return null
         val isPlaying = state?.isActive == true && state.state == PlaybackState.STATE_PLAYING

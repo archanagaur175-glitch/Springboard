@@ -86,7 +86,8 @@ class AppRepository(
             InstalledApp(
                 packageName = info.packageName,
                 label = label,
-                iconVersion = info.applicationInfo.updateTime,
+                iconVersion = runCatching { packageManager.getPackageInfo(info.packageName, 0).lastUpdateTime }
+                    .getOrDefault(0L),
             )
         }
         return apps

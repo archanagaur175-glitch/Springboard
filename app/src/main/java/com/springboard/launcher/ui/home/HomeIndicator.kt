@@ -37,7 +37,7 @@ fun HomeIndicator(
         modifier = modifier
             .fillMaxWidth()
             .height(zoneHeight)
-            .systemGestureExclusion(Rect(0f, 0f, EXCLUSION_WIDTH, zonePx))
+            .systemGestureExclusion { Rect(0f, 0f, EXCLUSION_WIDTH, zonePx) }
             .pointerInput(onSwipeUp) {
                 var total = 0f
                 detectVerticalDragGestures(

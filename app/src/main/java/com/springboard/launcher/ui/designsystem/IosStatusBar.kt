@@ -62,7 +62,7 @@ fun IosStatusBar(
             modifier = Modifier
                 .weight(1f)
                 .height(IosStatusBarHeight)
-                .systemGestureExclusion(Rect(0f, 0f, EXCLUSION_WIDTH, barPx)),
+                .systemGestureExclusion { Rect(0f, 0f, EXCLUSION_WIDTH, barPx) },
         ) {
             Text(
                 text = time,
@@ -77,7 +77,7 @@ fun IosStatusBar(
             modifier = Modifier
                 .weight(1f)
                 .height(IosStatusBarHeight)
-                .systemGestureExclusion(Rect(0f, 0f, EXCLUSION_WIDTH, barPx)),
+                .systemGestureExclusion { Rect(0f, 0f, EXCLUSION_WIDTH, barPx) },
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
