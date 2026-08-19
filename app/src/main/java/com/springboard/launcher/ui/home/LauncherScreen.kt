@@ -1,5 +1,6 @@
 package com.springboard.launcher.ui.home
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -8,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,6 +30,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,12 +44,14 @@ import com.springboard.launcher.domain.GridLayout
 import com.springboard.launcher.systemui.OverlayController
 import com.springboard.launcher.ui.applibrary.AppLibraryPage
 import com.springboard.launcher.ui.designsystem.IosStatusBar
+import com.springboard.launcher.ui.designsystem.IosStatusBarHeight
 import com.springboard.launcher.ui.designsystem.WallpaperBackground
 import com.springboard.launcher.ui.designsystem.rememberWallpaperBrush
 import com.springboard.launcher.ui.designsystem.rememberSquircleShape
 import com.springboard.launcher.ui.notifications.NotificationCenterSurface
 import com.springboard.launcher.ui.permission.GateKind
 import com.springboard.launcher.ui.permission.PermissionGate
+import com.springboard.launcher.ui.settings.SettingsActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -246,6 +255,31 @@ fun LauncherScreen(app: SpringboardApp) {
             HomeIndicator(
                 onSwipeUp = { if (!jiggleOn && openFolderId == null) recentsVisible = true },
                 modifier = Modifier.navigationBarsPadding().padding(top = 2.dp),
+            )
+        }
+
+        // Persistent settings affordance, pinned just below the status bar. It is a sibling of
+        // the page column (not inside it), so its tap never competes with the pager or the icons.
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = IosStatusBarHeight + 8.dp, end = 8.dp)
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.16f))
+                .semantics { contentDescription = "Open settings" }
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        context.startActivity(Intent(context, SettingsActivity::class.java))
+                    })
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp),
             )
         }
 

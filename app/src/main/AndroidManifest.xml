@@ -67,6 +67,11 @@
             android:exported="false"
             android:theme="@style/Theme.Springboard" />
 
+        <activity
+            android:name=".ui.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Springboard" />
+
         <service
             android:name=".systemui.OverlayService"
             android:exported="false" />

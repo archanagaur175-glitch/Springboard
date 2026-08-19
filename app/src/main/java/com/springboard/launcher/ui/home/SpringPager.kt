@@ -54,7 +54,29 @@ fun SpringPager(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { translationX = -offset.value },
+                .graphicsLayer { translationX = -offset.value }
+                .pointerInput(pageCount, pageWidthPx, enabled, maxOffset) {
+                    if (pageCount <= 1 || !enabled) return@pointerInput
+                    detectHorizontalDragGestures(
+                        onDragStart = { scope.launch { offset.stop() } },
+                        onHorizontalDrag = { _, dragAmount ->
+                            val next = (offset.value - dragAmount).coerceIn(0f, maxOffset)
+                            scope.launch { offset.snapTo(next) }
+                        },
+                        onDragEnd = {
+                            val nearest = ((offset.value / pageWidthPx).roundToInt())
+                                .coerceIn(0, pageCount - 1)
+                            val target = nearest * pageWidthPx
+                            scope.launch { offset.animateTo(target, SpringSpecs.Page) }
+                            onPageSettled(nearest)
+                        },
+                        onDragCancel = {
+                            val nearest = ((offset.value / pageWidthPx).roundToInt())
+                                .coerceIn(0, pageCount - 1)
+                            scope.launch { offset.animateTo(nearest * pageWidthPx, SpringSpecs.Page) }
+                        },
+                    )
+                },
         ) {
             repeat(pageCount.coerceAtLeast(0)) { index ->
                 Box(
@@ -65,34 +87,6 @@ fun SpringPager(
                     content(index)
                 }
             }
-        }
-
-        if (pageCount > 1 && enabled) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(pageCount, pageWidthPx, enabled) {
-                        detectHorizontalDragGestures(
-                            onDragStart = { scope.launch { offset.stop() } },
-                            onHorizontalDrag = { _, dragAmount ->
-                                val next = (offset.value - dragAmount).coerceIn(0f, maxOffset)
-                                scope.launch { offset.snapTo(next) }
-                            },
-                            onDragEnd = {
-                                val nearest = ((offset.value / pageWidthPx).roundToInt())
-                                    .coerceIn(0, pageCount - 1)
-                                val target = nearest * pageWidthPx
-                                scope.launch { offset.animateTo(target, SpringSpecs.Page) }
-                                onPageSettled(nearest)
-                            },
-                            onDragCancel = {
-                                val nearest = ((offset.value / pageWidthPx).roundToInt())
-                                    .coerceIn(0, pageCount - 1)
-                                scope.launch { offset.animateTo(nearest * pageWidthPx, SpringSpecs.Page) }
-                            },
-                        )
-                    },
-            )
         }
 
         if (pageCount == 0) {

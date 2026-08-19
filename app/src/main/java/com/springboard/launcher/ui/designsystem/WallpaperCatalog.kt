@@ -5,6 +5,8 @@ import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Shader
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -107,7 +109,11 @@ fun WallpaperBackground(
     modifier: Modifier = Modifier,
 ) {
     val brush = rememberWallpaperBrush(index)
-    modifier.drawBehind { drawRect(brush = brush) }
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .drawBehind { drawRect(brush = brush) },
+    )
 }
 
 val IosStatusBarHeight = 44.dp
