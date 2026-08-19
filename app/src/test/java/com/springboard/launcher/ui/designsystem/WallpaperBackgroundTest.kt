@@ -1,12 +1,13 @@
 package com.springboard.launcher.ui.designsystem
 
-import android.graphics.Color
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.captureRoboImage
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
+import kotlin.math.roundToInt
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -34,13 +35,13 @@ class WallpaperBackgroundTest {
             WallpaperBackground(index = 0, modifier = Modifier.fillMaxSize())
         }
 
-        val bitmap = composeRule.onRoot().captureRoboImage()
+        val pixels = composeRule.onRoot().captureToImage().toPixelMap()
 
-        val cx = bitmap.width / 2
-        val cy = bitmap.height / 2
-        val center = bitmap.getPixel(cx, cy)
+        val cx = pixels.width / 2
+        val cy = pixels.height / 2
+        val center = pixels[cx, cy]
 
-        val alpha = Color.alpha(center)
+        val alpha = (center.alpha * 255f).roundToInt()
         assertEquals("center pixel should be opaque, got alpha=$alpha", 255, alpha)
     }
 }

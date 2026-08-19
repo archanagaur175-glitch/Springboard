@@ -1,9 +1,7 @@
 package com.springboard.launcher.ui.home
 
-import android.content.Context
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
@@ -37,11 +35,6 @@ class GridPageTapTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private class StubAppRepository(context: Context) :
-        AppRepository(context, 56, CoroutineScope(SupervisorJob() + Dispatchers.Default), {}) {
-        override suspend fun loadIcon(app: InstalledApp): ImageBitmap? = null
-    }
-
     @Test
     fun tapOnAppIconInvokesCallback() {
         val app = InstalledApp(
@@ -65,7 +58,12 @@ class GridPageTapTest {
                 installed = mapOf(app.packageName to app),
                 folders = emptyMap(),
                 folderNames = emptyMap(),
-                appRepository = StubAppRepository(RuntimeEnvironment.getApplication()),
+                appRepository = AppRepository(
+                    RuntimeEnvironment.getApplication(),
+                    56,
+                    CoroutineScope(SupervisorJob() + Dispatchers.Default),
+                    {},
+                ),
                 jiggle = false,
                 dragController = DragController(),
                 onTapApp = { tapped = it },
