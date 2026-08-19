@@ -159,6 +159,13 @@ class HomeLayoutRepository(
         folderDao.rename(folderId, name)
     }
 
+    suspend fun removeFolder(folderId: Long) {
+        memberDao.clearForFolder(folderId)
+        folderDao.delete(folderId)
+        gridDao.deleteByRef(GridItemType.FOLDER, folderId.toString())
+        compactGrid()
+    }
+
     suspend fun moveMember(folderId: Long, packageName: String, slot: Int) {
         memberDao.updateSlot(folderId, packageName, slot)
     }

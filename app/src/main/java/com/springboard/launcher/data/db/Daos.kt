@@ -65,6 +65,9 @@ interface FolderMemberDao {
     @Query("UPDATE folder_members SET slot = :slot WHERE folderId = :folderId AND packageName = :packageName")
     suspend fun updateSlot(folderId: Long, packageName: String, slot: Int)
 
+    @Query("DELETE FROM folder_members WHERE folderId = :folderId")
+    suspend fun clearForFolder(folderId: Long)
+
     @Query("SELECT COUNT(*) FROM folder_members WHERE folderId = :folderId")
     suspend fun count(folderId: Long): Int
 }

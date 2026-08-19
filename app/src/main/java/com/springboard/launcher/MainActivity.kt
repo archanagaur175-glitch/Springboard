@@ -2,23 +2,27 @@ package com.springboard.launcher
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
-import androidx.compose.ui.Modifier
+import com.springboard.launcher.systemui.StatusBarController
 import com.springboard.launcher.ui.designsystem.SpringboardTheme
+import com.springboard.launcher.ui.home.LauncherScreen
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             SpringboardTheme {
-                Box(Modifier.fillMaxSize()) {
-                    Text("Springboard")
-                }
+                LauncherScreen(application as SpringboardApp)
             }
         }
+        StatusBarController.hideBars(this)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) StatusBarController.hideBars(this)
     }
 }
