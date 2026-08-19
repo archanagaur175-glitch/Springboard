@@ -37,6 +37,6 @@ object SpringSpecs {
     /** Lock screen swipe-up hand-off — crisp, critically damped. */
     val LockSwipe = spring<Float>(
         dampingRatio = 0.9f,
-        stiffness = Spring.StiffnessMediumHigh,
+        stiffness = Spring.StiffnessHigh,
     )
 }

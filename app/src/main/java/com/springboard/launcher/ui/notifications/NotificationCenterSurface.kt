@@ -103,7 +103,7 @@ fun NotificationCenterSurface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 10.dp, top = 10.dp, bottom = 14.dp)
+                    .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 14.dp)
                     .clip(RoundedCornerShape(28.dp)),
                 blurRadius = 48f,
             ) {
@@ -119,7 +119,7 @@ fun NotificationCenterSurface(
                             fontWeight = FontWeight.SemiBold,
                         )
                         Spacer(Modifier.weight(1f))
-                        if (notifications.isNotEmpty()) {
+                        if (!notifications.isNullOrEmpty()) {
                             Text(
                                 text = "Clear",
                                 color = Color.White.copy(alpha = 0.8f),
@@ -149,7 +149,7 @@ fun NotificationCenterSurface(
                     }
                     Spacer(Modifier.height(12.dp))
 
-                    if (notifications.isEmpty()) {
+                    if (notifications.isNullOrEmpty()) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
                                 text = if (SpringboardNotificationListener.isConnected) {
@@ -166,7 +166,7 @@ fun NotificationCenterSurface(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            items(notifications, key = { it.key }) { n ->
+                            items(notifications.orEmpty(), key = { it.key }) { n ->
                                 NotificationRow(
                                     notification = n,
                                     appRepository = appRepository,

@@ -27,11 +27,11 @@ class SpringboardNotificationListener : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
-        companion.instance = this
+        instance = this
     }
 
     override fun onDestroy() {
-        companion.instance = null
+        instance = null
         super.onDestroy()
     }
 
@@ -39,25 +39,25 @@ class SpringboardNotificationListener : NotificationListenerService() {
         val sorted = activeNotifications
             .map { it.toModel() }
             .sortedByDescending { it.whenPosted }
-        companion.publish(sorted)
+        publish(sorted)
     }
 
     override fun onListenerDisconnected() {
-        companion.publish(null)
+        publish(null)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         val model = sbn?.toModel() ?: return
-        val current = companion.notifications.value.orEmpty()
-        companion.publish(
+        val current = notifications.value.orEmpty()
+        publish(
             (current.filter { it.key != model.key } + model).sortedByDescending { it.whenPosted },
         )
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         sbn ?: return
-        val current = companion.notifications.value.orEmpty()
-        companion.publish(current.filter { it.key != sbn.key })
+        val current = notifications.value.orEmpty()
+        publish(current.filter { it.key != sbn.key })
     }
 
     private fun StatusBarNotification.toModel(): SpringboardNotification {

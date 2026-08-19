@@ -175,38 +175,38 @@ private fun SettingsScreen(
             item { SectionHeader("Permissions") }
 
             item {
-                SettingsRow("Overlay (Control Center)") {
+                SettingsRow(title = "Overlay (Control Center)", onClick = {
                     context.startActivity(
                         Intent(ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")),
                     )
-                }
+                })
             }
             item {
-                SettingsRow("Settings access (brightness)") {
+                SettingsRow(title = "Settings access (brightness)", onClick = {
                     context.startActivity(
                         Intent(ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")),
                     )
-                }
+                })
             }
             item {
-                SettingsRow("Notification listener") {
+                SettingsRow(title = "Notification listener", onClick = {
                     context.startActivity(Intent(ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                }
+                })
             }
             item {
-                SettingsRow("App notifications") {
+                SettingsRow(title = "App notifications", onClick = {
                     context.startActivity(
                         Intent(ACTION_APP_NOTIFICATION_SETTINGS).putExtra(EXTRA_APP_PACKAGE, context.packageName),
                     )
-                }
+                })
             }
 
             item { SectionHeader("System") }
 
             item {
-                SettingsRow("Set as home app") {
+                SettingsRow(title = "Set as home app", onClick = {
                     runCatching { context.startActivity(Intent(ACTION_HOME_SETTINGS)) }
-                }
+                })
             }
 
             item {

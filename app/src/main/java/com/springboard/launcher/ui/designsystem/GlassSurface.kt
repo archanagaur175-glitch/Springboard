@@ -4,12 +4,12 @@ import android.graphics.RenderEffect
 import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 
@@ -38,7 +38,7 @@ fun GlassSurface(
                             blurRadius,
                             blurRadius,
                             android.graphics.Shader.TileMode.CLAMP,
-                        )
+                        ).asComposeRenderEffect()
                     }
                 }
                 .drawBehind {

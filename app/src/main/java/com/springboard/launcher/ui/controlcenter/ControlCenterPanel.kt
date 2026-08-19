@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -110,7 +111,7 @@ fun ControlCenterPanel(
             GlassSurface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp, top = 10.dp, bottom = 12.dp)
+                    .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 12.dp)
                     .clip(RoundedCornerShape(28.dp)),
                 blurRadius = 48f,
             ) {
@@ -179,31 +180,31 @@ fun ControlCenterPanel(
                     Spacer(Modifier.height(18.dp))
 
                     Row(Modifier.fillMaxWidth()) {
-                        ToggleChip("Wi-Fi", wifiOn) {
+                        ToggleChip(label = "Wi-Fi", active = wifiOn, onClick = {
                             systemState.setWifiEnabled(!wifiOn) {
                                 runCatching {
-                                    context.startActivity(android.content.Intent(Settings.Panel.ACTION_WIFI_SETTINGS))
+                                    context.startActivity(android.content.Intent(Settings.Panel.ACTION_WIFI))
                                 }
                             }
-                        }
+                        })
                         Spacer(Modifier.width(10.dp))
-                        ToggleChip("Bluetooth", btOn) {
+                        ToggleChip(label = "Bluetooth", active = btOn, onClick = {
                             systemState.setBluetoothEnabled(!btOn) {
                                 runCatching {
                                     context.startActivity(android.content.Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
                                 }
                             }
-                        }
+                        })
                         Spacer(Modifier.width(10.dp))
-                        ToggleChip("Torch", torchOn) { systemState.toggleTorch() }
+                        ToggleChip(label = "Torch", active = torchOn, onClick = { systemState.toggleTorch() })
                     }
                     Spacer(Modifier.height(10.dp))
                     Row(Modifier.fillMaxWidth()) {
                         RotationToggle()
                         Spacer(Modifier.width(10.dp))
-                        ToggleChip("DND", active = false) {
+                        ToggleChip(label = "DND", active = false, onClick = {
                             val nm = context.getSystemService(android.app.NotificationManager::class.java)
-                            if (android.app.NotificationManager.areNotificationsEnabled(context)) {
+                            if (nm?.areNotificationsEnabled() == true) {
                                 runCatching { nm?.setInterruptionFilter(android.app.NotificationManager.INTERRUPTION_FILTER_PRIORITY) }
                                     .onFailure {
                                         runCatching {
@@ -215,10 +216,10 @@ fun ControlCenterPanel(
                                     context.startActivity(android.content.Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
                                 }
                             }
-                        }
+                        })
                         Spacer(Modifier.width(10.dp))
-                        ToggleChip("Airplane", active = false) {
-                            if (Settings.Global.canWrite(context)) {
+                        ToggleChip(label = "Airplane", active = false, onClick = {
+                            if (Settings.System.canWrite(context)) {
                                 val enabled = Settings.Global.getInt(
                                     context.contentResolver,
                                     Settings.Global.AIRPLANE_MODE_ON,
@@ -257,7 +258,7 @@ fun ControlCenterPanel(
 }
 
 @Composable
-private fun ToggleChip(
+private fun RowScope.ToggleChip(
     label: String,
     active: Boolean,
     onClick: () -> Unit,
@@ -299,10 +300,10 @@ private fun ToggleChip(
 }
 
 @Composable
-private fun RotationToggle() {
+private fun RowScope.RotationToggle() {
     var rotationLocked by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    ToggleChip("Rotation", active = rotationLocked) {
+    ToggleChip(label = "Rotation", active = rotationLocked, onClick = {
         val canWrite = Settings.System.canWrite(context)
         if (canWrite) {
             rotationLocked = !rotationLocked
@@ -323,7 +324,7 @@ private fun RotationToggle() {
                 )
             }
         }
-    }
+    })
 }
 
 @Composable

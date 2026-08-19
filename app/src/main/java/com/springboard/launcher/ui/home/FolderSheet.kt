@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
 import com.springboard.launcher.data.apps.AppRepository
 import com.springboard.launcher.data.apps.InstalledApp
 import com.springboard.launcher.data.db.FolderMemberEntity
@@ -100,7 +101,7 @@ fun FolderSheet(
                 .height(300.dp)
                 .clip(rememberSquircleShape())
                 .onGloballyPositioned { coords ->
-                    panelRect = Rect(coords.positionInWindow(), coords.size)
+                    panelRect = Rect(coords.positionInWindow(), coords.size.toSize())
                 },
             blurRadius = 48f,
         ) {
@@ -197,10 +198,11 @@ fun FolderSheet(
                 Modifier
                     .fillMaxSize()
                     .offset {
-                        val center = memberDrag.dragStartWindow + memberDrag.ghostOffset
+                        val centerX = memberDrag.dragStartWindow.x + memberDrag.ghostOffset.x
+                        val centerY = memberDrag.dragStartWindow.y + memberDrag.ghostOffset.y
                         IntOffset(
-                            x = (center.x - ghostSizePx / 2f).roundToInt(),
-                            y = (center.y - ghostSizePx / 2f).roundToInt(),
+                            x = (centerX - ghostSizePx / 2f).roundToInt(),
+                            y = (centerY - ghostSizePx / 2f).roundToInt(),
                         )
                     }
                     .graphicsLayer { scaleX = 1.15f; scaleY = 1.15f },
@@ -243,7 +245,7 @@ private fun MemberCell(
                         onDragStart = { start ->
                             val tl = topLeft()
                             if (tl != null) {
-                                dragController.beginDrag(app.packageName, app.packageName, GridItemType.APP, tl + start)
+                                dragController.beginDrag(-1L, app.packageName, GridItemType.APP, tl + start)
                             }
                         },
                         onDrag = { change, delta ->

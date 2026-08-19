@@ -5,7 +5,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -60,10 +59,10 @@ fun LauncherScreen(app: SpringboardApp) {
     val scope = rememberCoroutineScope()
     val dragController = remember { DragController() }
 
-    val installed by container.appRepository.apps.collectAsStateWithLifecycle()
-    val grid by container.homeLayout.grid.collectAsStateWithLifecycle()
-    val dock by container.homeLayout.dock.collectAsStateWithLifecycle()
-    val folders by container.homeLayout.folders.collectAsStateWithLifecycle()
+    val installed by container.appRepository.apps.collectAsStateWithLifecycle(initialValue = emptyList())
+    val grid by container.homeLayout.grid.collectAsStateWithLifecycle(initialValue = emptyList())
+    val dock by container.homeLayout.dock.collectAsStateWithLifecycle(initialValue = emptyList())
+    val folders by container.homeLayout.folders.collectAsStateWithLifecycle(initialValue = emptyList())
     val recents by container.settings.recentsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val wallpaper by container.settings.wallpaperFlow.collectAsStateWithLifecycle(initialValue = AppPrefs.wallpaperIndex)
 
@@ -85,7 +84,7 @@ fun LauncherScreen(app: SpringboardApp) {
 
     val openNotificationCenter: () -> Unit = {
         val enabled = runCatching {
-            android.app.NotificationManager.getEnabledListenerPackages(context)
+            androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(context)
                 .contains(context.packageName)
         }.getOrDefault(false)
         if (enabled) {
@@ -324,7 +323,7 @@ fun LauncherScreen(app: SpringboardApp) {
             val ghostSize = 56.dp
             val ghostSizePx = with(LocalDensity.current) { ghostSize.toPx() }
             val ghostApp = if (dragController.draggingType == GridItemType.APP) installedMap[ghostKey] else null
-            val ghostFolderId = if (dragController.draggingType == GridItemType.FOLDER) ghostKey.toLongOrNull() else null
+            val ghostFolderId = if (dragController.draggingType == GridItemType.FOLDER) ghostKey?.toLongOrNull() else null
             val ghostFolder = ghostFolderId?.let { folderMap[it] }
             Box(
                 Modifier

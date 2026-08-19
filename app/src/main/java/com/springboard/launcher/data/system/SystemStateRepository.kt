@@ -10,9 +10,9 @@ import android.content.IntentFilter
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
+import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
-import android.media.session.MediaMetadata
 import android.media.session.PlaybackState
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
@@ -144,7 +144,7 @@ class SystemStateRepository(
 
     private val volumeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == AudioManager.VOLUME_CHANGED_ACTION) readVolume()
+            if (intent?.action == "android.media.VOLUME_CHANGED_ACTION") readVolume()
         }
     }
 
@@ -228,7 +228,7 @@ class SystemStateRepository(
         ContextCompat.registerReceiver(
             app,
             volumeReceiver,
-            IntentFilter(AudioManager.VOLUME_CHANGED_ACTION),
+            IntentFilter("android.media.VOLUME_CHANGED_ACTION"),
             ContextCompat.RECEIVER_EXPORTED,
         )
     }

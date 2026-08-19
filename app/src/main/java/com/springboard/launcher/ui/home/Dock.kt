@@ -20,6 +20,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import com.springboard.launcher.data.apps.AppRepository
 import com.springboard.launcher.data.apps.InstalledApp
 import com.springboard.launcher.data.db.DockItemEntity
@@ -49,7 +50,7 @@ fun Dock(
             .graphicsLayer { scaleX = dockScale; scaleY = dockScale }
             .clip(RoundedCornerShape(28.dp))
             .onGloballyPositioned { coords ->
-                dragController.registerDock(Rect(coords.positionInWindow(), coords.size))
+                dragController.registerDock(Rect(coords.positionInWindow(), coords.size.toSize()))
             },
         backdrop = backdrop,
     ) {

@@ -86,7 +86,7 @@ class AppRepository(
             InstalledApp(
                 packageName = info.packageName,
                 label = label,
-                iconVersion = info.applicationInfo.updateTimeMillis,
+                iconVersion = info.applicationInfo.updateTime,
             )
         }
         return apps

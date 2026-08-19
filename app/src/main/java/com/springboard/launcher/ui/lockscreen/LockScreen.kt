@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -88,9 +87,9 @@ fun LockScreen(
             )
             Spacer(Modifier.height(26.dp))
             Row {
-                QuickAction("Torch") { container.systemState.toggleTorch() }
+                QuickAction(label = "Torch", onClick = { container.systemState.toggleTorch() })
                 Spacer(Modifier.width(18.dp))
-                QuickAction("Camera") {
+                QuickAction(label = "Camera", onClick = {
                     container.appRepository.cameraLaunchIntent()?.let {
                         runCatching { context.startActivity(it) }
                     }
@@ -99,8 +98,8 @@ fun LockScreen(
 
             Spacer(Modifier.weight(1f))
 
-            if (SpringboardNotificationListener.isConnected && notifications.isNotEmpty()) {
-                notifications.take(3).forEach { n ->
+            if (SpringboardNotificationListener.isConnected && !notifications.isNullOrEmpty()) {
+                notifications.orEmpty().take(3).forEach { n ->
                     LockNotificationPreview(n)
                     Spacer(Modifier.height(10.dp))
                 }

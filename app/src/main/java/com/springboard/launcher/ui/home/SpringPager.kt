@@ -73,10 +73,10 @@ fun SpringPager(
                     .fillMaxSize()
                     .pointerInput(pageCount, pageWidthPx, enabled) {
                         detectHorizontalDragGestures(
-                            onDragStart = { offset.stop() },
+                            onDragStart = { scope.launch { offset.stop() } },
                             onHorizontalDrag = { _, dragAmount ->
                                 val next = (offset.value - dragAmount).coerceIn(0f, maxOffset)
-                                offset.snapTo(next)
+                                scope.launch { offset.snapTo(next) }
                             },
                             onDragEnd = {
                                 val nearest = ((offset.value / pageWidthPx).roundToInt())

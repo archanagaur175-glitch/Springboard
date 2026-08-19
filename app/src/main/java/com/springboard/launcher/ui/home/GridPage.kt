@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
 import com.springboard.launcher.data.apps.AppRepository
 import com.springboard.launcher.data.apps.InstalledApp
 import com.springboard.launcher.data.db.FolderEntity
@@ -107,7 +108,7 @@ fun GridPage(
                             .fillMaxSize()
                             .padding(3.dp)
                             .onGloballyPositioned { coords ->
-                                val rect = Rect(coords.positionInWindow(), coords.size)
+                                val rect = Rect(coords.positionInWindow(), coords.size.toSize())
                                 if (item != null) {
                                     if (item.isFolder) {
                                         dragController.registerFolderBound(item.refKey, rect)
