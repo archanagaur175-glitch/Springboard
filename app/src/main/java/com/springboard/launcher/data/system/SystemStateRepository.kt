@@ -281,13 +281,16 @@ class SystemStateRepository(
     }
 
     private fun readSignal(): Int {
-        val level = try {
-            val ss = telephonyManager?.signalStrength ?: return 3
-            ss.level
-        } catch (t: Throwable) {
-            3
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val level = try {
+                val ss = telephonyManager?.signalStrength ?: return 3
+                ss.level
+            } catch (t: Throwable) {
+                3
+            }
+            return if (level in 0..4) level else 3
         }
-        return if (level in 0..4) level else 3
+        return 3
     }
 
     private fun rssiToLevel(rssi: Int): Int = when {
@@ -303,7 +306,7 @@ class SystemStateRepository(
         val metadata = controller.metadata
         val state = controller.playbackState
         if (metadata == null && state == null) return null
-        val isPlaying = state?.isActive == true && state.state == PlaybackState.STATE_PLAYING
+        val isPlaying = state?.state == PlaybackState.STATE_PLAYING
         val info = MediaSessionInfo(
             packageName = controller.packageName,
             title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE),
@@ -372,6 +375,7 @@ class SystemStateRepository(
         if (changed) _wifiEnabled.value = enabled
     }
 
+    @SuppressLint("MissingPermission")
     fun setBluetoothEnabled(enabled: Boolean, fallback: () -> Unit) {
         val adapter = try {
             BluetoothAdapter.getDefaultAdapter()
