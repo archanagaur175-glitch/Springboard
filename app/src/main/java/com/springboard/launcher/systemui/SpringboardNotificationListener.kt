@@ -25,6 +25,16 @@ data class SpringboardNotification(
  */
 class SpringboardNotificationListener : NotificationListenerService() {
 
+    override fun onCreate() {
+        super.onCreate()
+        companion.instance = this
+    }
+
+    override fun onDestroy() {
+        companion.instance = null
+        super.onDestroy()
+    }
+
     override fun onListenerConnected() {
         val sorted = activeNotifications
             .map { it.toModel() }
@@ -77,8 +87,24 @@ class SpringboardNotificationListener : NotificationListenerService() {
         private val _notifications = MutableStateFlow<List<SpringboardNotification>?>(null)
         val notifications: StateFlow<List<SpringboardNotification>?> = _notifications
 
+        @Volatile var instance: SpringboardNotificationListener? = null
+
         fun publish(list: List<SpringboardNotification>?) {
             _notifications.value = list
         }
+
+        /** Clears one notification through the connected listener. */
+        fun dismiss(key: String) {
+            if (key.isBlank()) return
+            runCatching { instance?.cancelNotification(key) }
+        }
+
+        fun dismissAll() {
+            val current = _notifications.value.orEmpty()
+            current.forEach { dismiss(it.key) }
+        }
+
+        /** Whether this listener is connected (i.e. notification access was granted). */
+        val isConnected: Boolean get() = _notifications.value != null
     }
 }
