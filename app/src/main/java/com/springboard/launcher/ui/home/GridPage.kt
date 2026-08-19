@@ -7,26 +7,37 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,22 +53,28 @@ import com.springboard.launcher.ui.designsystem.IosRed
 import kotlin.math.sin
 
 /**
- * One page of the home grid: a fixed 4x6 arrangement of icon cells with a shared,
- * phase-randomized wobble animation when jiggle mode is on.
+ * One page of the home grid: a fixed 4x6 arrangement of icon cells. Cell bounds are
+ * registered with the shared [DragController] so jiggle drags can hit-test against
+ * real on-screen rectangles, highlight targets, and resolve drops on release.
  */
 @Composable
 fun GridPage(
+    page: Int,
     items: List<GridItemEntity>,
     installed: Map<String, InstalledApp>,
     folders: Map<Long, FolderEntity>,
     folderNames: Map<Long, String>,
     appRepository: AppRepository,
     jiggle: Boolean,
+    dragController: DragController,
     onTapApp: (String) -> Unit,
     onTapFolder: (Long) -> Unit,
     onLongPressItem: (GridItemEntity) -> Unit,
     onRemoveItem: (GridItemEntity) -> Unit,
-    dragHooks: DragHooks = NoopDragHooks,
+    onSwapItems: (GridItemEntity, GridItemEntity) -> Unit,
+    onMoveToSlot: (GridItemEntity, Int) -> Unit,
+    onDropInFolder: (GridItemEntity, Long) -> Unit,
+    onDropOnDock: (GridItemEntity) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val transition = rememberInfiniteTransition(label = "jiggle")
@@ -80,30 +97,63 @@ fun GridPage(
                     .weight(1f),
             ) {
                 for (col in 0 until GridLayout.COLUMNS) {
-                    val slot = row * GridLayout.COLUMNS + col
-                    val item = items.getOrNull(slot)
+                    val slotInPage = row * GridLayout.COLUMNS + col
+                    val absoluteIndex = GridLayout.indexOf(page, slotInPage)
+                    val item = items.getOrNull(slotInPage)
+                    val squircle = com.springboard.launcher.ui.designsystem.rememberSquircleShape()
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize()
-                            .padding(3.dp),
+                            .padding(3.dp)
+                            .onGloballyPositioned { coords ->
+                                val rect = Rect(coords.positionInWindow(), coords.size)
+                                if (item != null) {
+                                    if (item.isFolder) {
+                                        dragController.registerFolderBound(item.refKey, rect)
+                                    } else {
+                                        dragController.registerAppBound(item.refKey, rect)
+                                    }
+                                }
+                                // The occupied cell also counts as a (no-op) empty drop target
+                                // so a drop back on the origin cell resolves to "nothing".
+                                dragController.registerEmptySlot(absoluteIndex, rect)
+                            },
                         contentAlignment = Alignment.TopCenter,
                     ) {
                         if (item != null) {
                             IconCell(
                                 item = item,
+                                cellIndex = absoluteIndex,
+                                items = items,
                                 installed = installed,
                                 folders = folders,
                                 folderNames = folderNames,
                                 appRepository = appRepository,
                                 jiggle = jiggle,
                                 wobbleRad = wobbleRad,
+                                dragController = dragController,
                                 onTapApp = onTapApp,
                                 onTapFolder = onTapFolder,
                                 onLongPressItem = onLongPressItem,
                                 onRemoveItem = onRemoveItem,
-                                dragHooks = dragHooks,
+                                onSwapItems = onSwapItems,
+                                onMoveToSlot = onMoveToSlot,
+                                onDropInFolder = onDropInFolder,
+                                onDropOnDock = onDropOnDock,
                                 modifier = Modifier.fillMaxSize(),
+                            )
+                        } else if (
+                            jiggle &&
+                            dragController.isDragging &&
+                            dragController.hoveredEmptySlotIndex == absoluteIndex
+                        ) {
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp)
+                                    .clip(squircle)
+                                    .border(2.dp, Color.White.copy(alpha = 0.55f), squircle),
                             )
                         }
                     }
@@ -116,17 +166,23 @@ fun GridPage(
 @Composable
 private fun IconCell(
     item: GridItemEntity,
+    cellIndex: Int,
+    items: List<GridItemEntity>,
     installed: Map<String, InstalledApp>,
     folders: Map<Long, FolderEntity>,
     folderNames: Map<Long, String>,
     appRepository: AppRepository,
     jiggle: Boolean,
     wobbleRad: Float,
+    dragController: DragController,
     onTapApp: (String) -> Unit,
     onTapFolder: (Long) -> Unit,
     onLongPressItem: (GridItemEntity) -> Unit,
     onRemoveItem: (GridItemEntity) -> Unit,
-    dragHooks: DragHooks,
+    onSwapItems: (GridItemEntity, GridItemEntity) -> Unit,
+    onMoveToSlot: (GridItemEntity, Int) -> Unit,
+    onDropInFolder: (GridItemEntity, Long) -> Unit,
+    onDropOnDock: (GridItemEntity) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val app = if (item.isApp) installed[item.refKey] else null
@@ -134,33 +190,63 @@ private fun IconCell(
     val phase = (item.id * 137.5f) % 360f
     val rotation = if (jiggle) sin(Math.toRadians((wobbleRad + phase).toDouble())).toFloat() * 2.8f else 0f
 
-    val context = LocalContext.current
-    val type = item.type
-    val refKey = item.refKey
+    val isHovered = dragController.isDragging && dragController.hoveringKey == item.refKey
+    val isGhost = dragController.isDragging && dragController.draggingKey == item.refKey
 
     val onTap = {
-        when (type) {
+        when (item.type) {
             GridItemType.APP -> app?.let { onTapApp(it.packageName) }
             GridItemType.FOLDER -> folderId?.let { onTapFolder(it) }
         }
     }
     val onRemove = {
-        when (type) {
+        when (item.type) {
             GridItemType.APP -> app?.let { onRemoveItem(item) }
             GridItemType.FOLDER -> folderId?.let { onRemoveItem(item) }
         }
     }
 
+    var nodeCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+
+    val resolveDrop: () -> Unit = {
+        val hit = dragController.endDrag()
+        when {
+            hit.key == null && hit.slotIndex != null -> onMoveToSlot(item, hit.slotIndex)
+            hit.key != null && hit.isFolder -> hit.key.toLongOrNull()?.let { onDropInFolder(item, it) }
+            hit.key != null -> items.firstOrNull { it.refKey == hit.key }?.let { target -> onSwapItems(item, target) }
+            dragController.goingToDock() -> onDropOnDock(item)
+            else -> Unit
+        }
+    }
+
     Box(
         modifier = modifier
-            .graphicsLayer { rotationZ = rotation }
-            .pointerInput(jiggle, dragHooks) {
+            .graphicsLayer {
+                rotationZ = rotation
+                if (isHovered) {
+                    scaleX = 1.1f
+                    scaleY = 1.1f
+                }
+                if (isGhost) alpha = 0.25f
+            }
+            .onGloballyPositioned { coords -> nodeCoords = coords }
+            .pointerInput(jiggle, dragController) {
+                val nodeTopLeft = { nodeCoords?.positionInWindow() }
                 if (jiggle) {
                     detectDragGestures(
-                        onDragStart = { offset -> dragHooks.onDragStart(item.id, offset) },
-                        onDrag = { _, delta -> dragHooks.onDrag(delta) },
-                        onDragEnd = { dragHooks.onDragEnd() },
-                        onDragCancel = { dragHooks.onDragCancel() },
+                        onDragStart = { start ->
+                            val topLeft = nodeTopLeft()
+                            if (topLeft != null) {
+                                dragController.beginDrag(item.id, item.refKey, item.type, topLeft + start)
+                            }
+                        },
+                        onDrag = { change, delta ->
+                            val topLeft = nodeTopLeft()
+                            val window = if (topLeft != null) topLeft + change.position else change.position
+                            dragController.move(delta, window)
+                        },
+                        onDragEnd = { resolveDrop() },
+                        onDragCancel = { dragController.cancelDrag() },
                     )
                 } else {
                     detectTapGestures(
@@ -176,8 +262,8 @@ private fun IconCell(
             modifier = Modifier.padding(top = 6.dp),
         ) {
             val label = when {
-                type == GridItemType.APP -> app?.label ?: refKey
-                type == GridItemType.FOLDER -> folderNames[folderId] ?: "Folder"
+                item.isApp -> app?.label ?: item.refKey
+                item.isFolder -> folderNames[folderId] ?: "Folder"
                 else -> ""
             }
             Box(contentAlignment = Alignment.Center) {
@@ -201,7 +287,7 @@ private fun IconCell(
                             .background(Color.White.copy(alpha = 0.06f)),
                     )
                 }
-                if (jiggle) {
+                if (jiggle && !isGhost) {
                     DeleteBadge(
                         onClick = { onRemove() },
                         modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-8).dp),
@@ -252,7 +338,6 @@ private fun FolderTile(
     appRepository: AppRepository,
     modifier: Modifier = Modifier,
 ) {
-    // Folder tile placeholder; the full folder view arrives with jiggle/folder support.
     val folder = folders[folderId]
     Box(
         modifier = modifier
@@ -263,7 +348,6 @@ private fun FolderTile(
         Text(
             text = folder?.name?.firstOrNull()?.uppercase() ?: "F",
             color = Color.White,
-            fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
         )
     }

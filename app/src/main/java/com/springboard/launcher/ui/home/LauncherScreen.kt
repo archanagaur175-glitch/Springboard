@@ -1,5 +1,6 @@
 package com.springboard.launcher.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -15,12 +18,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.springboard.launcher.SpringboardApp
+import com.springboard.launcher.data.db.GridItemEntity
 import com.springboard.launcher.data.db.GridItemType
 import com.springboard.launcher.data.prefs.AppPrefs
 import com.springboard.launcher.domain.GridLayout
@@ -29,18 +40,23 @@ import com.springboard.launcher.ui.applibrary.AppLibraryPage
 import com.springboard.launcher.ui.designsystem.IosStatusBar
 import com.springboard.launcher.ui.designsystem.WallpaperBackground
 import com.springboard.launcher.ui.designsystem.rememberWallpaperBrush
+import com.springboard.launcher.ui.designsystem.rememberSquircleShape
 import com.springboard.launcher.ui.notifications.NotificationCenterSurface
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
  * The Springboard home screen: wallpaper, iOS status bar, paged grid + App Library,
  * page dots, glass dock, home indicator, and the overlay surfaces (folder, NC, recents).
+ * A single [DragController] is hoisted here so jiggle drags share one source of truth
+ * across every grid page and the dock.
  */
 @Composable
 fun LauncherScreen(app: SpringboardApp) {
     val container = app.container
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val dragController = remember { DragController() }
 
     val installed by container.appRepository.apps.collectAsStateWithLifecycle()
     val grid by container.homeLayout.grid.collectAsStateWithLifecycle()
@@ -74,13 +90,54 @@ fun LauncherScreen(app: SpringboardApp) {
 
     val openFolder: (Long) -> Unit = { id -> openFolderId = id }
 
-    val removeItem: (com.springboard.launcher.data.db.GridItemEntity) -> Unit = { item ->
+    val removeItem: (GridItemEntity) -> Unit = { item ->
         scope.launch {
-            when (item.type) {
-                GridItemType.APP -> container.homeLayout.removeFromGrid(item.refKey)
-                GridItemType.FOLDER -> item.refKey.toLongOrNull()?.let { container.homeLayout.removeFolder(it) }
+            when {
+                item.isApp -> container.homeLayout.removeFromGrid(item.refKey)
+                item.isFolder -> item.refKey.toLongOrNull()?.let { container.homeLayout.removeFolder(it) }
             }
             jiggleOn = false
+        }
+    }
+
+    val swapItems: (GridItemEntity, GridItemEntity) -> Unit = { a, b ->
+        scope.launch { container.homeLayout.swapGridPositions(a, b) }
+    }
+
+    val moveToSlot: (GridItemEntity, Int) -> Unit = { item, slotIndex ->
+        scope.launch { container.homeLayout.moveGridItemTo(item, slotIndex) }
+    }
+
+    val dropInFolder: (GridItemEntity, Long) -> Unit = { item, folderId ->
+        if (item.isApp) {
+            scope.launch { container.homeLayout.addToFolder(folderId, item.refKey) }
+        }
+    }
+
+    val dropOnDock: (GridItemEntity) -> Unit = { item ->
+        if (item.isApp) {
+            val pkg = item.refKey
+            scope.launch {
+                if (!container.homeLayout.isInDock(pkg)) {
+                    container.homeLayout.addToDock(pkg)
+                    container.homeLayout.removeFromGrid(pkg)
+                }
+            }
+        }
+    }
+
+    // Dragging one app onto another for a beat merges them into a new folder.
+    LaunchedEffect(dragController.draggingKey, dragController.hoveringKey, dragController.hoveringIsFolder) {
+        val dragged = dragController.draggingKey ?: return@LaunchedEffect
+        val target = dragController.hoveringKey ?: return@LaunchedEffect
+        if (target == dragged || dragController.hoveringIsFolder) return@LaunchedEffect
+        if (grid.none { it.refKey == dragged && it.isApp }) return@LaunchedEffect
+        if (grid.none { it.refKey == target && it.isApp }) return@LaunchedEffect
+        delay(650)
+        if (dragController.draggingKey == dragged && dragController.hoveringKey == target) {
+            val newFolderId = container.homeLayout.createFolder(dragged, target)
+            openFolderId = newFolderId
+            dragController.cancelDrag()
         }
     }
 
@@ -110,17 +167,22 @@ fun LauncherScreen(app: SpringboardApp) {
                 ) { page ->
                     if (page < gridPageCount) {
                         GridPage(
+                            page = page,
                             items = grid.filter { it.page == page }.sortedBy { it.slot },
                             installed = installedMap,
                             folders = folderMap,
                             folderNames = folderNames,
                             appRepository = container.appRepository,
                             jiggle = jiggleOn,
+                            dragController = dragController,
                             onTapApp = launchApp,
                             onTapFolder = openFolder,
                             onLongPressItem = { jiggleOn = true },
                             onRemoveItem = removeItem,
-                            dragHooks = remember { DragController() },
+                            onSwapItems = swapItems,
+                            onMoveToSlot = moveToSlot,
+                            onDropInFolder = dropInFolder,
+                            onDropOnDock = dropOnDock,
                             modifier = Modifier.fillMaxSize(),
                         )
                     } else {
@@ -149,6 +211,7 @@ fun LauncherScreen(app: SpringboardApp) {
                 installed = installedMap,
                 appRepository = container.appRepository,
                 backdrop = backdrop,
+                dragController = dragController,
                 onTap = launchApp,
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
             )
@@ -161,17 +224,25 @@ fun LauncherScreen(app: SpringboardApp) {
 
         val openFolderIdValue = openFolderId
         if (openFolderIdValue != null) {
+            val folderMembers by remember(openFolderIdValue) {
+                container.homeLayout.folderMembers(openFolderIdValue)
+            }.collectAsStateWithLifecycle(initialValue = emptyList())
             FolderSheet(
                 folderId = openFolderIdValue,
                 folderName = folderNames[openFolderIdValue] ?: "Folder",
-                members = emptyList(),
+                members = folderMembers,
                 installed = installedMap,
                 appRepository = container.appRepository,
-                systemState = container.systemState,
                 jiggle = false,
                 onTapApp = launchApp,
                 onRemoveMember = { pkg ->
                     scope.launch { container.homeLayout.removeFromFolder(openFolderIdValue, pkg) }
+                },
+                onRename = { name ->
+                    scope.launch { container.homeLayout.renameFolder(openFolderIdValue, name) }
+                },
+                onDelete = {
+                    scope.launch { container.homeLayout.removeFolder(openFolderIdValue) }
                 },
                 onClose = { openFolderId = null },
                 modifier = Modifier.matchParentSize(),
@@ -206,6 +277,48 @@ fun LauncherScreen(app: SpringboardApp) {
                         detectTapGestures(onTap = { jiggleOn = false })
                     },
             )
+        }
+
+        // Floating ghost of the item currently being dragged (grid + dock path only).
+        val ghostKey = dragController.draggingKey
+        if (ghostKey != null && openFolderId == null) {
+            val ghostSize = 56.dp
+            val ghostSizePx = with(LocalDensity.current) { ghostSize.toPx() }
+            val ghostApp = if (dragController.draggingType == GridItemType.APP) installedMap[ghostKey] else null
+            val ghostFolderId = if (dragController.draggingType == GridItemType.FOLDER) ghostKey.toLongOrNull() else null
+            val ghostFolder = ghostFolderId?.let { folderMap[it] }
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .graphicsLayer {
+                        translationX = dragController.dragStartWindow.x + dragController.ghostOffset.x - ghostSizePx / 2f
+                        translationY = dragController.dragStartWindow.y + dragController.ghostOffset.y - ghostSizePx / 2f
+                        scaleX = 1.15f
+                        scaleY = 1.15f
+                    },
+            ) {
+                when {
+                    ghostApp != null -> AppIconView(
+                        app = ghostApp,
+                        appRepository = container.appRepository,
+                        modifier = Modifier.size(ghostSize),
+                    )
+                    ghostFolder != null -> Box(
+                        Modifier
+                            .size(ghostSize)
+                            .clip(rememberSquircleShape())
+                            .background(Color.White.copy(alpha = 0.35f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        androidx.compose.material3.Text(
+                            text = ghostFolder.name.firstOrNull()?.uppercase() ?: "F",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
         }
     }
 }

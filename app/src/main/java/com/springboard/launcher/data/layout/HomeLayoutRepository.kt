@@ -111,7 +111,6 @@ class HomeLayoutRepository(
         } else {
             gridDao.updatePosition(item.id, tPage, tSlot)
         }
-        compactGrid()
     }
 
     // ==================== Folders ====================
