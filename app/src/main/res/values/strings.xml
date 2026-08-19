@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Springboard</string>
+    <string name="notification_listener_label">Springboard Notification Access</string>
+    <string name="notification_listener_summary">Allows Springboard to show your notifications in its Notification Center</string>
+    <string name="home_role_label">Make Springboard your home screen</string>
+    <string name="home_role_summary">Springboard needs to be your default launcher to appear when you press Home. No data leaves your device.</string>
+</resources>
