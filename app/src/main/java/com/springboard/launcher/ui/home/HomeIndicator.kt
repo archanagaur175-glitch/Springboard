@@ -1,7 +1,7 @@
 package com.springboard.launcher.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,9 +40,9 @@ fun HomeIndicator(
             .systemGestureExclusion { Rect(0f, 0f, EXCLUSION_WIDTH, zonePx) }
             .pointerInput(onSwipeUp) {
                 var total = 0f
-                detectVerticalDragGestures(
+                detectDragGestures(
                     onDragStart = { total = 0f },
-                    onVerticalDrag = { _, dragAmount -> total += dragAmount.y },
+                    onDrag = { _, dragAmount -> total += dragAmount.y },
                     onDragEnd = { if (total < -40f) onSwipeUp() },
                     onDragCancel = {},
                 )
